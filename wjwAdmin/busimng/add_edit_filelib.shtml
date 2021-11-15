@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- __header   -->
+    <meta charset="utf-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" href="/static/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="/static/css/public.css" media="all">
+    <style id="layuimini-bg-color">
+    </style>
+    <!-- __end header   -->
+    <link rel="stylesheet" href="/static/lib/jq-module/zyupload/zyupload-1.0.0.min.css" media="all">
+    <title>用户</title>
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-form layuimini-form" id="vue_app">
+    <input type="hidden" id="s_id" name="id" value=""/>
+    <input type="hidden" id="s_url" name="url" value=""  lay-verify="required" lay-reqtext="[文件路径]不能为空"/>
+    <div class="layui-form-item">
+        <label class="layui-form-label required">文件标题</label>
+        <div class="layui-input-block">
+            <input type="text" id="s_name" name="name" lay-verify="required" lay-reqtext="文件标题不能为空" placeholder="请输入文件标题" value="" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">文件类型</label>
+        <div class="layui-input-block" style="width: 200px;">
+            <select id="s_type" name="type" >
+                <option value="doc">doc</option>
+                <option value="pdf">pdf</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">上传文件</label>
+        <div class="layui-input-block" style="width: 500px;line-height: 35px;">
+            <a href="" id="d_filename"></a>
+            <div id="uploadInf"></div>
+        </div>
+        <div id="zyupload" class="zyupload"></div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>
+        </div>
+    </div>
+</div>
+<!--__footer-->
+<script src="/static/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="/static/js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+
+<script src="/static/js/common.js" charset="utf-8"></script>
+<script src="/static/js/jquery-1.11.1.min.js" charset="utf-8"></script>
+<script src="/static/js/vue.js" type="text/javascript" charset="utf-8"></script>
+<!--end __footer-->
+<script src="/static/lib/jq-module/zyupload/zyupload.js?v=1.11" charset="utf-8"></script>
+<!--zyupload-1.0.0.min.js-->
+<script>
+    $(function () {
+        var v_token=getJsonStorage('g_token');
+        if(isNullToken(v_token)){ return false; }
+console.log("parent.opAction=",parent.opAction);
+        if(parent.opAction=='edit') {
+            $("#s_id").val(parent.id);  $("#s_name").val(parent.name);
+            $("#s_url").val(parent.url);  $("#d_filename").attr("href",parent.url);
+            var v_filename=getUrlname(parent.url);
+            $("#d_filename").html(v_filename);
+            $("#s_type").val(parent.type);
+        }else{
+            $("#s_id").val('');  $("#s_name").val('');
+            $("#s_url").val('');  $("#d_filename").attr("href",'');
+        }
+        var v_type=$("#s_type").val();
+
+        // 初始化插件
+        $("#zyupload").zyUpload({
+            width: "650px",     // 宽度
+            height: "400px",     // 宽度
+            itemWidth: "140px",     // 文件项的宽度
+            itemHeight: "115px",   // 文件项的高度
+            url: hostUrl+"/upload2?token="+v_token,  // 上传文件的路径
+            // headers:{'token':v_token},
+            fileType: ["doc", "docx", "pdf"],// 上传文件的类型
+            fileSize: 51200000,     // 上传文件的大小
+            multiple: false,        // 是否可以多个文件上传
+            dragDrop: true,       // 是否可以拖动上传文件
+            tailor: true,         // 是否可以裁剪图片
+            del: true,      // 是否可以删除文件
+            finishDel: false,  	  // 是否在上传文件完成后删除预览
+            /* 外部获得的回调接口 */
+            onSelect: function (selectFiles, allFiles) {    // 选择文件的回调方法  selectFile:当前选中的文件  allFiles:还没上传的全部文件
+                console.info("当前选择了以下文件：");
+                console.info(selectFiles);
+            },
+            onDelete: function (file, files) {   // 删除一个文件的回调方法 file:当前删除的文件  files:删除之后的文件
+                console.info("当前删除了此文件：");
+                console.info(file.name);
+            },
+            onSuccess: function (file, response) {   // 文件上传成功的回调方法
+                console.info("此文件上传成功：");
+                console.info(file.name);
+                console.info("此文件上传到服务器地址：");
+                console.info(response);
+
+                var json_response=JSON.parse(response);
+                console.log("response,json_response=",response,json_response);
+                if(json_response.code==200) {
+                    $("#uploadInf").append("<p>上传成功，文件地址是：" + json_response.result + "</p>");
+                    $("#s_url").val(json_response.result);
+                }else{
+                    layer.msg(json_response.message);
+                }
+            },
+            onFailure: function (file, response) {  // 文件上传失败的回调方法
+                console.info("此文件上传失败：");
+                console.info(file.name);
+            },
+            onComplete: function (response) {  // 上传完成的回调方法
+                console.info("文件上传完成");
+                console.info(response);
+            }
+        });
+    });
+    //取得url后的文件名称
+    function getUrlname(url){
+        url=url.split('?')[0] ;// 我们只要?号前的
+        var urlSlashCount=url.split('/').length; // 统计有3斜杠
+        return url.split('/')[urlSlashCount-1].toLowerCase(); //获取数组最后一个
+    }
+    var vm = {
+        data() {
+            return {   };
+        },
+        created: function () {
+            let _this=this;
+            this.initData();
+        },
+        methods: {
+            initData(){
+                // var v_publicNoticeList=[{title:'应急小助理上线了',create_time:'2021年10月1日',content:'测试内容1'},
+                //     {title:'应急小助理进入公测阶段',create_time:'2021年9月28日',content:'测试内容2'}
+                // ] ;
+                // this.publicNoticeList=v_publicNoticeList;
+            }
+
+        },
+
+    };
+    var vueObj = Vue.extend(vm);  new vueObj().$mount('#vue_app');
+    layui.use(['form', 'layarea'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            layarea = layui.layarea,
+            $ = layui.$;
+        layarea.render({
+            elem: '#area-picker',
+            // data: {
+            //     province: '广东省',
+            //     city: '深圳市',
+            //     county: '龙岗区',
+            // },
+            change: function (res) {
+                //选择结果
+                console.log(res);
+            }
+        });
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+            var gs_userInfo = getJsonStorage('g_userInfo');
+            var v_provinceId = gs_userInfo.provinceId;
+            // var v_url=$("#s_url").val();        if(isEmpty(v_url)){  }
+            var jsonData=data.field;//{name:data.name,provinceId:v_provinceId,url:data.url,type:data.type};
+            jsonData['provinceId']=v_provinceId;
+            jsonData=JSON.stringify(jsonData);
+console.log("submit.jsonData=",jsonData);
+            // var jsonData=JSON.stringify(data.field);
+            if(parent.opAction=='edit') {
+                Post(hostUrl + '/doFile/updateFileDataAction', jsonData, function (res) {
+ console.log("updateFileDataAction.res=",res);
+                    if (res.code == 200) {
+                        alert_success(res.message, function () {
+                            parent.location.reload('#currentTableId'); //数据刷新
+                            layer.closeAll();
+                        })
+                    } else {
+                        alert_error(res.message);
+                    }
+                });
+            }
+            if(parent.opAction=='add') {
+                Post(hostUrl + '/doFile/addFileAction', jsonData, function (res) {
+console.log("addFileAction.res=",res);
+                    if (res.code == 200) {
+                        alert_success(res.message, function () {
+                            parent.location.reload('#currentTableId'); //数据刷新
+                            layer.closeAll();
+                        })
+                    } else {
+                        alert_error(res.message);
+                    }
+                });
+            }
+            return false;
+        });
+
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- __header   -->
+    <meta charset="utf-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" href="/static/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="/static/css/public.css" media="all">
+    <style id="layuimini-bg-color">
+    </style>
+    <!-- __end header   -->
+    <title>消息列表</title>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+
+       <!-- <fieldset class="table-search-fieldset">
+            <legend>搜索信息</legend>
+        </fieldset>-->
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        <script type="text/html" id="currentTableBar">
+<!--            <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="view">查看</a>-->
+{{# if(d.showUnRead == 1){ }}
+       <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="read">设置已读</a>
+{{# } }}
+
+        </script>
+
+    </div>
+</div>
+
+<!--__footer-->
+<script src="/static/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="/static/js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+
+<script src="/static/js/common.js?v=1.0" charset="utf-8"></script>
+<script src="/static/js/jquery-1.11.1.min.js" charset="utf-8"></script>
+<script src="/static/js/vue.js" type="text/javascript" charset="utf-8"></script>
+<!--end __footer-->
+
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table;
+        // /admin/users/list_user  __TPL_LAYUIMINI__/api/table.json
+        var v_token=getJsonStorage('g_token');
+        if( !isValidToken(v_token) ) return false;
+        var gs_userInfo = getJsonStorage('g_userInfo');
+        var v_provinceId = gs_userInfo.provinceId;
+        $("#s_provinceId").val(v_provinceId);
+        if(isNullToken(v_token)){ return false; }
+        // { title: '提示',   layEvent: 'LAYTABLE_TIPS',   icon: 'layui-icon-tips'  }
+        // defaultToolbar: ['filter', 'exports', 'print'],
+        table.render({
+            elem: '#currentTableId',
+            url: hostUrl+'/doCondition/getNewsAction',
+            headers:{'Content-Type':'application/json','token':v_token},
+            where:{  },
+            toolbar: '#toolbarDemo',
+            cols: [[
+                {type: "checkbox", width: 50},
+                {field: 'id', title: 'ID', width: 80, sort: true},
+                {field: 'content', title: '消息内容', width: 400, sort: true},
+                {field: 'time', title: '发送时间', width: 150},
+                {field: 'state', title: '是否已读', width: 100},
+
+                {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
+            ]],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 10,
+            page: true,
+            dataType: 'json',
+            skin: 'line'
+
+
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            var field = data.field;
+            //执行重载
+            table.reload('currentTableId', {
+                page: {
+                    curr: 1
+                }
+                , where: field
+            });
+            return false;
+        });
+
+        /**
+         * toolbar监听事件
+         */
+        table.on('toolbar(currentTableFilter)', function (obj) {
+
+        });
+
+        //监听表格复选框选择
+        table.on('checkbox(currentTableFilter)', function (obj) {
+            console.log("table.checkbox.obj=",obj);
+        });
+
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+console.log("table-data=",data);
+            if (obj.event === 'view') {
+                window.opAction="view";//zuName,company,name,tel,userName
+                window.id=data.id;  window.provinceId=data.provinceId;
+                window.userName=data.userName;  window.roleCode=data.roleCode;
+                window.zuName=data.zuName;   window.company=data.company;
+                window.name=data.name;   window.tel=data.tel;    window.userName=data.userName;
+                var index = layer.open({
+                    title: '查看消息',   type: 2,    shade: 0.2,    maxmin:true,   shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: '/busimng/view_remind.shtml?v=1.01',
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+                return false;
+
+            } else if (obj.event === 'read') {
+                layer.confirm('确定已读吗？', function (index) {
+                    $.ajax({
+                        url: hostUrl+"/doCondition/updateNewsAction",
+                        headers:{'Content-Type':'application/json','token':v_token},
+                        type: 'GET',  data: { id: data.id},     dataType: 'json',
+                        success: function (res) {
+                            // console.log("delUserAction.res=",res); return false;
+                            if( !exitByCode(res.code) ) { return false;}
+                            if (res.code == 200) {
+                                var del_index = layer.msg(res.message);
+                                setTimeout(function(){
+                                    layer.close(del_index)
+                                    table.reload('currentTableId');
+                                }, 2000);
+                            } else {
+                                layer.msg(res.message);
+                            }
+                        },
+                        error: function () {
+                            layer.close(layer.confirm());
+                            layer.msg("请求访问发生错误");
+                        }
+                    });
+                    return false;
+                });
+
+            }
+        });
+
+    });
+</script>
+
+</body>
+</html>

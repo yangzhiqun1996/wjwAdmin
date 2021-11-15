@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- __header   -->
+    <meta charset="utf-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" href="/static/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="/static/css/public.css" media="all">
+    <style id="layuimini-bg-color">
+    </style>
+    <!-- __end header   -->
+    <title>用户</title>
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-form layuimini-form" id="vue_app">
+    <input type="hidden" id="s_id" name="id" value=""/> <input type="hidden" id="s_roleCode" name="roleCode" value="102"/>
+    <input type="hidden" id="provinceId" name="provinceId" value=""/>
+    <div class="layui-form-item">
+        <label class="layui-form-label required">组名</label>
+        <div class="layui-input-block">
+            <input type="text" id="zuName" name="zuName" lay-verify="required" lay-reqtext="组名不能为空" placeholder="请输入组名" value="" class="layui-input">
+
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">用户名</label>
+        <div class="layui-input-block">
+            <input type="text" id="userName" name="userName" lay-verify="required" lay-reqtext="用户名不能为空" placeholder="请输入用户名" value="" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">所属角色</label>
+        <div class="layui-input-inline" style="width: 200px;">
+            <select  v-model="roleSelected" name="roleCode">
+                <option value="">===请选择===</option>
+                <option  v-for="item in roleList" :key="roleList_key" :value="item.roleCode">{{item.roleName}}</option>
+
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">所在单位</label>
+        <div class="layui-input-block">
+            <input type="text" id="company" name="company" lay-verify="required" lay-reqtext="所在单位不能为空" placeholder="请输入所在单位" value="" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">负责人</label>
+        <div class="layui-input-block">
+            <input type="text" id="name" name="name" lay-verify="required" lay-reqtext="负责人不能为空" placeholder="请输入负责人" value="" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">联系电话</label>
+        <div class="layui-input-block">
+            <input type="text" id="tel" name="tel" lay-verify="required" lay-reqtext="联系电话不能为空" placeholder="请输入联系电话" value="" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>
+        </div>
+    </div>
+</div>
+<!--__footer-->
+<script src="/static/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="/static/js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+
+<script src="/static/js/common.js" charset="utf-8"></script>
+<script src="/static/js/jquery-1.11.1.min.js" charset="utf-8"></script>
+<script src="/static/js/vue.js" type="text/javascript" charset="utf-8"></script>
+<!--end __footer-->
+<script>
+    $(function () {
+        if(parent.opAction=='edit') {//zuName,company,name,tel,userName
+            $('#userName').attr("readonly","readonly");
+            $("#s_id").val(parent.id);  $("#s_roleCode").val(parent.roleCode);
+            $("#provinceId").val(parent.provinceId);  $("#userName").val(parent.userName);
+            $("#zuName").val(parent.zuName);  $("#company").val(parent.company);
+            $("#name").val(parent.name);  $("#tel").val(parent.tel);
+        }else{
+            var gs_userInfo = getJsonStorage('g_userInfo');
+            $("#provinceId").val(gs_userInfo.provinceId);
+        }
+
+    });
+    var vm = {
+        data() {
+            return { roleSelected:"",
+                roleList:[{"id":"1","roleCode":"1","roleName":"国家卫健委"},{"id":"2","roleCode":"2","roleName":"省级卫健委"},{"id":"3","roleCode":"3","roleName":"省级指挥部"},{"id":"4","roleCode":"4","roleName":"省级指挥部小组成员"},{"id":"6","roleCode":"101","roleName":"国家级管理员"},{"id":"7","roleCode":"102","roleName":"省级管理员"}]
+            };
+        },
+        created: function () {
+            let _this=this;
+
+        },
+        mounted() {	  //alert(222);
+            this.initData();
+        },
+        methods: {
+            initData(){
+                var v_token=getJsonStorage('g_token');
+console.log("listUser_roleCode=",getJsonStorage('listUser_roleCode'));
+                this.roleSelected= getJsonStorage('listUser_roleCode');//$("#s_roleCode").val();
+                $.ajax({
+                    url: hostUrl+"/doUser/getRoleCodeAciton",
+                    headers:{'Content-Type':'application/json','token':v_token},
+                    type: 'GET',  data: {},  dataType: 'json',
+                    success: function (res) {
+                        console.log("getRoleCodeAciton.res=",res);
+                        if( !exitByCode(res.code) ) { return false;}
+                        if (res.code == 200) {
+                            this.roleList= JSON.stringify(res.result);
+                            console.log("getRoleCodeAciton.roleList=",this.roleList);
+                        } else {
+                            layer.msg(res.message);
+                        }
+                    },
+                    error: function () {
+                        layer.close(layer.confirm());
+                        layer.msg("请求访问发生错误");
+                    }
+                });
+
+            }
+
+        },
+
+    };
+    var vueObj = Vue.extend(vm);  new vueObj().$mount('#vue_app');
+    layui.use(['form', 'layarea'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            layarea = layui.layarea,
+            $ = layui.$;
+        layarea.render({
+            elem: '#area-picker',
+            // data: {
+            //     province: '广东省',
+            //     city: '深圳市',
+            //     county: '龙岗区',
+            // },
+            change: function (res) {
+                //选择结果
+                console.log(res);
+            }
+        });
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+            var jsonData=JSON.stringify(data.field);
+            if(parent.opAction=='edit') {
+                Post(hostUrl + '/doUser/updateUserAction', jsonData, function (res) {
+                    if (res.code == 200) {
+                        alert_success(res.message, function () {
+                            parent.location.reload('#currentTableId'); //数据刷新
+                            layer.closeAll();
+                        })
+                    } else {
+                        alert_error(res.message);
+                    }
+                });
+            }else {
+                Post(hostUrl + '/doUser/addUserAction', jsonData, function (res) {
+                    if (res.code == 200) {
+                        alert_success(res.message, function () {
+                            parent.location.reload('#currentTableId'); //数据刷新
+                            layer.closeAll();
+                        })
+                    } else {
+                        alert_error(res.message);
+                    }
+                });
+            }
+            return false;
+        });
+
+    });
+</script>
+</body>
+</html>

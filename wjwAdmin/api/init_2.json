@@ -1,0 +1,59 @@
+{
+  "homeInfo": {
+    "title": "用户管理",
+    "href": "/busimng/list_user.shtml?v=1.03"
+  },
+  "logoInfo": {
+    "title": "后台管理",
+    "image": "/static/images/logo.png?v=1.4",
+    "href": ""
+  },
+  "menuInfo": [
+    {
+      "title": "后台管理",
+      "icon": "fa fa-address-book",
+      "href": "",
+      "target": "_self",
+      "child": [
+        {
+          "title": "业务管理",
+          "href": "",
+          "icon": "fa fa-flag-o",
+          "target": "_self",
+          "child": [
+            {
+              "title": "用户管理",
+              "href": "/busimng/list_user.shtml?v=1.03",
+              "icon": "fa fa-stumbleupon-circle",
+              "target": "_self"
+            },
+            {
+              "title": "启动条件",
+              "href": "/busimng/list_startup.shtml?v=1.09",
+              "icon": "fa fa-viacoin",
+              "target": "_self"
+            }
+          ,
+            {
+              "title": "响应措施",
+              "href": "/busimng/list_measure.shtml?v=1.05",
+              "icon": "fa fa-viacoin",
+              "target": "_self"
+            }
+
+          ,
+            {
+              "title": "文件管理",
+              "href": "/busimng/list_filelib.shtml?v=1.02",
+              "icon": "fa fa-viacoin",
+              "target": "_self"
+            }
+          ]
+        }
+
+
+      ]
+    }
+
+  ]
+}

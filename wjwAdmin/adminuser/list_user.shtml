@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- __header   -->
+    <meta charset="utf-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" href="/static/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="/static/css/public.css" media="all">
+    <style id="layuimini-bg-color">
+    </style>
+    <!-- __end header   -->
+    <title>用户列表</title>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+
+        <fieldset class="table-search-fieldset">
+            <legend>搜索信息</legend>
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <input type="hidden" id="s_provinceId" name="provinceId" />
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">用户名</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="userName" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <!--<div class="layui-inline">
+                            <label class="layui-form-label">性别</label>
+                            <div class="layui-input-inline">
+                                <select name="sex">
+                                    <option value="">请选择性别</option>
+                                    <option value="1">男</option>
+                                    <option value="2">女</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">昵称</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="uname" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">手机号</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="tel" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>-->
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn layui-btn-primary"  lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+
+        <script type="text/html" id="toolbarDemo">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加 </button>
+<!--                <button class="layui-btn layui-btn-sm layui-btn-danger data-delete-btn" lay-event="delete"> 删除 </button>-->
+            </div>
+        </script>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        <script type="text/html" id="is_abnormal">
+            <input type="checkbox" name="status" lay-skin="switch"
+                  lay-filter="status" data="{{ d.id }}" lay-text="是|否" 
+                  {{# if(d.status == 9){ }}
+                    checked
+                  {{# } }}
+                   />
+          </script>
+
+        <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">编辑</a>
+            <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+            <!-- <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="flag_except">标记异常</a> -->
+        </script>
+
+    </div>
+</div>
+
+<!--__footer-->
+<script src="/static/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="/static/js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+
+<script src="/static/js/common.js" charset="utf-8"></script>
+<script src="/static/js/jquery-1.11.1.min.js" charset="utf-8"></script>
+<script src="/static/js/vue.js" type="text/javascript" charset="utf-8"></script>
+<!--end __footer-->
+
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table;
+        // /admin/users/list_user  __TPL_LAYUIMINI__/api/table.json
+        var v_token=getJsonStorage('g_token');
+        var gs_userInfo = getJsonStorage('g_userInfo');
+        var v_provinceId = gs_userInfo.provinceId;
+        $("#s_provinceId").val(v_provinceId);
+        if(isNullToken(v_token)){ return false; }
+        table.render({
+            elem: '#currentTableId',
+            url: hostUrl+'/doUser/getProvinceAdminListAction',
+            headers:{'Content-Type':'application/json','token':v_token},
+            // parseData: function(res) {
+            // // debugger; //res 即为原始返回的数据
+            // console.log("parseData.res=",res);
+            //     return {
+            //         "code": res.code, //解析接口状态
+            //         "msg": res.message, //解析提示文本
+            //         "count": 1, //解析数据长度
+            //         "data": res.result //解析数据列表
+            //     };
+            // },
+            where:{ status : 0 },
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print'],
+            cols: [[
+                {type: "checkbox", width: 50},
+                {field: 'id', title: 'ID', width: 80, sort: true},
+                {field: 'userName', title: '用户名', width: 100, sort: true},
+                {field: 'provinceName', title: '所在区域', width: 120},
+                // {field: 'provinceName', title: '角色', width: 80},
+                // {field: 'tel', title: '手机', width: 150},
+                // {field: 'jifen', title: '积分', width: 80},
+                // {field: 'status_name', title: '状态', minWidth: 90},
+                {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
+            ]],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 10,
+            page: true,
+            dataType: 'json',
+            skin: 'line'
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            var field = data.field;
+            //执行重载
+            table.reload('currentTableId', {
+                page: {
+                    curr: 1
+                }
+                , where: field
+            });
+            return false;
+        });
+
+        /**
+         * toolbar监听事件
+         */
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'add') {  // 监听添加操作
+                window.opAction="add";
+                var index = layer.open({
+                    title: '添加用户',  type: 2,   shade: 0.2,  maxmin:true,
+                    shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: '/adminuser/add_edit_user.shtml?v=1',
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+
+            }
+        });
+
+        //监听表格复选框选择
+        table.on('checkbox(currentTableFilter)', function (obj) {
+            console.log("table.checkbox.obj=",obj);
+        });
+
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+console.log("table-data=",data);
+            if (obj.event === 'edit') {
+                window.opAction="edit";
+                window.userName=data.userName;
+                window.provinceId=data.provinceId;
+                var index = layer.open({
+                    title: '编辑用户',   type: 2,    shade: 0.2,    maxmin:true,   shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: '/adminuser/add_edit_user.shtml?v=1.1',//
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+                return false;
+            } else if (obj.event === 'delete') {
+                layer.confirm('确定删除吗？', function (index) {
+                    $.ajax({
+                        url: hostUrl+"/doUser/delAdminUserAction",
+                        headers:{'Content-Type':'application/json','token':v_token},
+                        type: 'GET',  data: {userName: data.userName},     dataType: 'json',
+                        success: function (res) {
+                            if (res.code == 200) {
+                                var del_index = layer.msg(res.message);
+                                setTimeout(function(){
+                                    layer.close(del_index)
+                                    table.reload('currentTableId');
+                                }, 2000);
+                            } else {
+                                layer.msg(res.message);
+                            }
+                        },
+                        error: function () {
+                        layer.close(layer.confirm());
+                            layer.msg("请求访问发生错误");
+                        }
+                    });
+                    return false;
+                });
+
+            }
+        });
+
+    });
+</script>
+
+</body>
+</html>

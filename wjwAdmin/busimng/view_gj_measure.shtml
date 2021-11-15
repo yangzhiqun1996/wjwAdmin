@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- __header   -->
+    <meta charset="utf-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" href="/static/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="/static/css/public.css" media="all">
+    <style id="layuimini-bg-color">
+    </style>
+    <!-- __end header   -->
+    <title></title>
+<style>
+body {
+    background-color: #ffffff;
+}
+.st_box{ display: flex; flex-wrap: wrap; margin-top: 5px; }
+.s_input{ width: 600px; }
+.delrow{ margin-left: 10px; border:1px solid gray; padding: 2px 5px 2px 5px;}
+#btn_ctrlbox{ margin-top: 8px; }
+.btn_add{ font-size:14px; padding: 2px 5px 2px 5px;  }
+
+</style>
+</head>
+<body>
+<div class="layui-form layuimini-form" id="vue_app">
+    <input type="hidden"  id="s_tid" name="tid" value=""/>
+    <input type="hidden" id="s_measure" name="measure" value=""/>
+    <!--<div class="layui-form-item">
+        <label class="layui-form-label required">ID</label>
+        <div class="layui-input-block">
+            <input type="text" class="layui-input" style="width: 200px" id="s_tid" lay-verify="required" name="tid" value=""/>
+        </div>
+    </div>-->
+    <div class="layui-form-item">
+        <label class="layui-form-label required">标题</label>
+        <div class="layui-input-block">
+            <input type="text" id="title" name="title" lay-verify="required" lay-reqtext="标题不能为空" placeholder="请输入标题" value="" class="layui-input">
+<!--            <tip>填写自己管理账号的名称。</tip>-->
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label required">内容</label>
+        <div class="layui-input-block" id="tlists">
+            <input type="text" name="value" lay-verify="required" lay-reqtext="内容项不能为空" placeholder="请输入内容项" value="" class="layui-input">
+
+        </div>
+    </div>
+
+    <!--<div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>
+        </div>
+    </div>-->
+</div>
+<!--__footer-->
+<script src="/static/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="/static/js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+
+<script src="/static/js/common.js" charset="utf-8"></script>
+<script src="/static/js/jquery-1.11.1.min.js" charset="utf-8"></script>
+<script src="/static/js/vue.js" type="text/javascript" charset="utf-8"></script>
+<!--end __footer-->
+<script>
+    $(function () {
+        if(parent.opAction=='view_gj') {
+            $("#s_tid").val(parent.tid);  $("#title").val(parent.title);
+            console.log("parent.tlist=",parent.tlist);
+            var tlists= JSON.parse(parent.tlist);
+            var htmls="";
+            for(var i=0;i<tlists.length;i++){
+                htmls +='<div class="st_box">';
+                htmls += '<input type="hidden" name="id" value="'+tlists[i].id+'"><input type="text" name="value" class="s_input" lay-verify="required" lay-reqtext="内容项不能为空" placeholder="请输入内容项" value="'+tlists[i].value+'" class="layui-input">';
+                // htmls += '<span class="delrow" onclick="del_row(this)">删行</span>';
+                htmls += '</div>';
+            }
+            // htmls +='<div id="btn_ctrlbox"><button class="btn_add" onclick="add_row()">增行</button></div>';
+            $("#tlists").html(htmls);
+        }
+        if(parent.opAction=='add') {
+            var htmls="";
+
+            htmls +='<div class="st_box">';
+            htmls += '<input type="hidden" name="id" value=""><input type="text" name="value" class="s_input" lay-verify="required" lay-reqtext="内容项不能为空" placeholder="请输入内容项" value="" class="layui-input">';
+            htmls += '<span class="delrow" onclick="del_row(this)">删行</span>';
+            htmls += '</div>';
+
+            htmls +='<div id="btn_ctrlbox"><button class="btn_add" onclick="add_row()">增行</button></div>';
+            $("#tlists").html(htmls);
+        }
+        if(parent.opAction=='edit') {
+            $("#s_tid").val(parent.tid);  $("#title").val(parent.title);
+console.log("parent.tlist=",parent.tlist);
+            var tlists= JSON.parse(parent.tlist);
+            var htmls="";
+            for(var i=0;i<tlists.length;i++){
+                htmls +='<div class="st_box">';
+                htmls += '<input type="hidden" name="id" value="'+tlists[i].id+'"><input type="text" name="value" class="s_input" lay-verify="required" lay-reqtext="内容项不能为空" placeholder="请输入内容项" value="'+tlists[i].value+'" class="layui-input">';
+                htmls += '<span class="delrow" onclick="del_row(this)">删行</span>';
+                htmls += '</div>';
+            }
+            htmls +='<div id="btn_ctrlbox"><button class="btn_add" onclick="add_row()">增行</button></div>';
+            $("#tlists").html(htmls);
+        }
+
+    });
+    function add_row() {
+        var htmls="";
+        htmls +='<div class="st_box">';
+        htmls += '<input type="hidden" name="id" value=""><input type="text" name="value" class="s_input" lay-verify="required" lay-reqtext="内容项不能为空" placeholder="请输入内容项" value="" class="layui-input">';
+        htmls += '<span class="delrow" onclick="del_row(this)">删行</span>';
+        htmls += '</div>';
+        $("#btn_ctrlbox").prepend(htmls);
+    }
+    function del_row(a_ele) {
+        $(a_ele).parent(".st_box").remove();
+
+    }
+
+    layui.use(['form', 'layarea'], function () {
+        var form = layui.form,
+            layer = layui.layer,
+            layarea = layui.layarea,
+            $ = layui.$;
+        layarea.render({
+            elem: '#area-picker',
+            // data: {
+            //     province: '广东省',
+            //     city: '深圳市',
+            //     county: '龙岗区',
+            // },
+            change: function (res) {
+                //选择结果
+                console.log(res);
+            }
+        });
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+            var v_tid=$("#s_tid").val(),v_title=$("#title").val();
+            var json_measures={tid:v_tid,title:v_title};
+            var list_arr=[];
+            $(".st_box ").each(function(){
+                var v_id=$(this).children("input[name='id']").val();
+                var v_value=$(this).children("input[name='value']").val();
+                var json_item={id:v_id,value:v_value};
+                list_arr.push(json_item);
+            })
+            console.log("list_arr=",list_arr);  //return false;
+            json_measures["list"]=list_arr;
+            json_measures["tid"]=v_tid;   json_measures["title"]=v_title;
+            console.log("json_measures=",json_measures); // return false;
+            var v_measures=JSON.stringify(json_measures);
+            $("#s_measure").val(v_measures);
+            console.log("v_measures=",v_measures);  console.log("json_measures=",json_measures);  // return false;
+            var gs_userInfo = getJsonStorage('g_userInfo');
+            var v_provinceId = gs_userInfo.provinceId;
+            var jsonData={measureData:json_measures,provinceId:v_provinceId};
+             jsonData=JSON.stringify(jsonData);
+            var url="/doMeasures/addOneProvinceMeasureAction";   //某省响应条件添加一条
+            if(parent.opAction=='edit') {
+                url = "/doMeasures/updateOneProvinceMeatureAction"; //某省响应措施修改一条
+            }
+            Post(hostUrl+url, jsonData, function (res) {
+                if (res.code == 200) {
+                    alert_success(res.message, function () {
+                        parent.location.reload('#currentTableId'); //数据刷新
+                        layer.closeAll();
+                    })
+                } else {
+                    alert_error(res.message);
+                }
+            });
+            return false;
+        });
+
+    });
+</script>
+</body>
+</html>

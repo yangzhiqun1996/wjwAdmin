@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- __header   -->
+    <meta charset="utf-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" href="/static/lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="/static/css/public.css" media="all">
+    <style id="layuimini-bg-color">
+    </style>
+    <!-- __end header   -->
+    <title>列表</title>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+
+        <!--<fieldset class="table-search-fieldset">
+            <legend>搜索信息</legend>
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">标题</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="username" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn layui-btn-primary"  lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>-->
+
+        <script type="text/html" id="toolbarDemo">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加 </button>
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-view-btn" lay-event="listview_gj"> 查看国家响应措施 </button>
+<!--   <button class="layui-btn layui-btn-sm layui-btn-danger data-delete-btn" lay-event="delete"> 删除 </button>-->
+            </div>
+        </script>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        <script type="text/html" id="is_abnormal">
+            <input type="checkbox" name="status" lay-skin="switch"
+                  lay-filter="status" data="{{ d.id }}" lay-text="是|否" 
+                  {{# if(d.status == 9){ }}
+                    checked
+                  {{# } }}
+                   />
+          </script>
+
+        <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">编辑</a>
+            <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+
+            <a class="layui-btn layui-btn-normal layui-btn-xs data-count-up" lay-event="up">↑</a>
+            <a class="layui-btn layui-btn-normal layui-btn-xs data-count-down" lay-event="down">↓</a>
+        </script>
+
+    </div>
+</div>
+
+<!--__footer-->
+<script src="/static/lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="/static/js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+
+<script src="/static/js/common.js?v=1.02" charset="utf-8"></script>
+<script src="/static/js/jquery-1.11.1.min.js" charset="utf-8"></script>
+<script src="/static/js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+<!--end __footer-->
+
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery,   form = layui.form,    table = layui.table;
+        // /admin/users/list_user  __TPL_LAYUIMINI__/api/table.json
+        var v_token=getJsonStorage('g_token');
+        if( !isValidToken(v_token) ) return false;
+        var gs_userInfo = getJsonStorage('g_userInfo');
+        var v_provinceId = gs_userInfo.provinceId;
+        if(isNullToken(v_token)){ return false; }
+        table.render({
+            elem: '#currentTableId',
+            url: hostUrl+'/doMeasures/getProvinceMeasureListAction',
+            headers:{'Content-Type':'application/json','token':v_token},
+            where:{ provinceId : v_provinceId,},
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print'],
+            cols: [[
+                {type: "checkbox", width: 50},
+                {field: 'tid', title: 'ID', width: 80, sort: true},
+                {field: 'title', title: '标题', width: 300, sort: true},
+
+                {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
+            ]],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 10,     page: true,      dataType: 'json',
+            skin: 'line'
+
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            var field = data.field;
+            //执行重载
+            table.reload('currentTableId', {
+                page: {
+                    curr: 1
+                }
+                , where: field
+            });
+            return false;
+        });
+
+        /**
+         * toolbar监听事件
+         */
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'add') {  // 监听添加操作
+                window.opAction="add";
+                var index = layer.open({
+                    title: '添加响应措施',  type: 2,   shade: 0.2,  maxmin:true,
+                    shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: '/busimng/add_edit_measure.shtml?v=1.02',
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+            }else if (obj.event === 'listview_gj') {
+                window.opAction = "listview_gj";
+                var index = layer.open({
+                    title: '国家响应措施', type: 2, shade: 0.2, maxmin: true,
+                    shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: '/busimng/listview_gj_measure.shtml?v=1.02',
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+            }
+        });
+
+        //监听表格复选框选择
+        table.on('checkbox(currentTableFilter)', function (obj) {
+            console.log("table.checkbox.obj=",obj);
+        });
+
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+console.log("table-data=",data);
+            if (obj.event === 'edit') {
+                window.opAction="edit";
+                window.tid=data.tid;  window.title=data.title;   window.tlist=data.list;
+                var index = layer.open({
+                    title: '编辑响应措施',   type: 2,    shade: 0.2,    maxmin:true,   shadeClose: true,
+                    area: ['100%', '100%'],
+                    content: '/busimng/add_edit_measure.shtml?v=1.02',
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+                return false;
+            } else if (obj.event === 'delete') {
+                var gs_userInfo = getJsonStorage('g_userInfo');
+                var v_provinceId = gs_userInfo.provinceId;
+                layer.confirm('确定删除吗？', function (index) {
+                    $.ajax({
+                        url: hostUrl+"/doMeasures/delOneProvinceMeatureAction",
+                        headers:{'Content-Type':'application/json','token':v_token},
+                        type: 'GET',  data: {provinceId: v_provinceId,tid:data.tid},     dataType: 'json',
+                        success: function (res) {
+                            if( !exitByCode(res.code) ) { return false;}
+                            if (res.code == 200) {
+                                var del_index = layer.msg(res.message);
+                                setTimeout(function(){
+                                    layer.close(del_index)
+                                    table.reload('currentTableId');
+                                }, 2000);
+                            } else {
+                                layer.msg(res.message);
+                            }
+                        },
+                        error: function () {
+                        layer.close(layer.confirm());
+                            layer.msg("请求访问发生错误");
+                        }
+                    });
+                    return false;
+                });
+            } else if (obj.event === 'up') {
+                var gs_userInfo = getJsonStorage('g_userInfo');
+                var v_provinceId = gs_userInfo.provinceId;
+                console.log("v_provinceId=",v_provinceId);
+                $.ajax({
+                    url: hostUrl+"/doMeasures/updateSortAction",
+                    headers:{'Content-Type':'application/json','token':v_token},
+                    type: 'GET',  data: {direction:1,provinceId:v_provinceId,oldId:data.tid},  dataType: 'json',
+                    success: function (res) {
+                        if( !exitByCode(res.code) ) { return false;}
+                        if (res.code == 200) {
+                            var msg_index = layer.msg(res.message);
+                            setTimeout(function(){
+                                layer.close(msg_index);
+                                table.reload('currentTableId');
+                            }, 2000);
+                        } else {
+                            layer.msg(res.message);
+                        }
+                    },
+                    error: function () {
+                        layer.close(layer.confirm());
+                        layer.msg("请求访问发生错误");
+                    }
+                });
+                return false;
+            } else if (obj.event === 'down') {
+                var gs_userInfo = getJsonStorage('g_userInfo');
+                var v_provinceId = gs_userInfo.provinceId;
+                console.log("v_provinceId=",v_provinceId);
+                $.ajax({
+                    url: hostUrl+"/doMeasures/updateSortAction",
+                    headers:{'Content-Type':'application/json','token':v_token},
+                    type: 'GET',  data: {direction:0,provinceId:v_provinceId,oldId:data.tid},  dataType: 'json',
+                    success: function (res) {
+                        if( !exitByCode(res.code) ) { return false;}
+
+                        if (res.code == 200) {
+                            var msg_index = layer.msg(res.message);
+                            setTimeout(function(){
+                                layer.close(msg_index);
+                                table.reload('currentTableId');
+                            }, 2000);
+                        } else {
+                            layer.msg(res.message);
+                        }
+                    },
+                    error: function () {
+                        layer.close(layer.confirm());
+                        layer.msg("请求访问发生错误");
+                    }
+                });
+                return false;
+            }
+        });
+
+    });
+</script>
+
+</body>
+</html>
